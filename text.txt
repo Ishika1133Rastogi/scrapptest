@@ -1,0 +1,104 @@
+// // const axios = require('axios');
+// // const cheerio = require('cheerio');
+// // const Link = require('./Link');
+
+// // const scrapeAndStoreUrls = async (url, parent) => {
+// //     try {
+// //         const response = await axios.get(url);
+// //         const $ = cheerio.load(response.data);
+
+// //         const links = [];
+// //         $('a').each((index, element) => {
+// //             const linkUrl = $(element).attr('href');
+// //             if (linkUrl  && !(linkUrl.startsWith('https://') || linkUrl.endsWith('.com'))) {
+// //                 const newLink = new Link({ url: linkUrl });
+// //                 if (parent) {
+// //                     parent.children.push(newLink);
+// //                 } else {
+// //                     links.push(newLink.save()); 
+// //                 }
+// //                 links.push(scrapeAndStoreUrls(linkUrl, newLink));
+// //             }
+// //         });
+
+// //         if (!parent) {
+// //             await Promise.all(links);
+// //         }
+// //     } catch (error) {
+// //         console.error('Error scraping page:',error);
+// //     }
+// // };
+
+// // scrapeAndStoreUrls('https://quotes.toscrape.com/');
+
+
+// const express = require('express');
+// const axios = require('axios');
+// const cheerio = require('cheerio');
+// const Link = require('./Link');
+// const app = express();
+// const cors = require('cors');
+
+// app.use(express.json());
+// app.use(cors());
+
+// const scrapeAndStoreUrls = async (url, parent) => {
+//     try {
+//         const response = await axios.get(url);
+//         const $ = cheerio.load(response.data);
+
+//         $('a').each(async (index, element) => {
+//             const linkUrl = $(element).attr('href');
+//             if (linkUrl && !(linkUrl.startsWith('https://') || linkUrl.endsWith('.com'))) {
+//                 const newLink = new Link({ url: linkUrl });
+//                 if (parent) {
+//                     parent.children.push(newLink);
+//                     await parent.save();
+//                 } else {
+//                     await newLink.save();
+//                 }
+//                 await scrapeAndStoreUrls(linkUrl, newLink);
+//             }
+//         });
+//     } catch (error) {
+//         console.error('Error scraping page:', error);
+//     }
+// };
+
+// app.post('/scrape', async (req, res) => {
+//     const { url } = req.body;
+//     console.log(url)
+//     try {
+//         await scrapeAndStoreUrls(url, null);
+//         const storedUrls = await Link.find({}, { _id: 0, __v: 0 }).exec();
+//         res.json(storedUrls);
+//     } catch (error) {
+//         console.error('Error scraping and storing URLs:', error);
+//         res.status(500).json({ error: 'Failed to scrape and store URLs' });
+//     }
+// });
+
+// app.listen(5000, () => {
+//     console.log('Server running on http://localhost:5000');
+// });
+
+
+
+
+<button onClick={() => setDisplayUrls(!displayUrls)}>
+        {displayUrls ? 'Hide URLs' : 'Show URLs'}
+      </button>
+    {displayUrls && (
+      <div className="scraped-urls-container">
+  <h2 className="scraped-urls-header">Scraped URLs</h2>
+  <ul className="scraped-urls-list">
+    {urls.map((url, index) => (
+      <li key={index} className="scraped-urls-list-item">
+        <a href={url.url} target="_blank" rel="noopener noreferrer">
+          {url.url}
+        </a>
+      </li>
+    ))}
+  </ul>
+</div>
+    )}
