@@ -102,3 +102,33 @@
   </ul>
 </div>
     )}
+
+
+
+
+    //StoreData function 
+    
+function storedata(){
+  fs.readFile('output.txt', 'utf8', async (err, data) => {
+    if (err) {
+      console.error('Error reading output file:', err);
+      return;
+    }
+    const urls = data.split('\n').filter(Boolean);
+ 
+    // Extract the first URL as BASE_URL
+    const BASE_URL = urls.shift().trim();
+    const newBase = new Base({
+      BASE_URL,
+      scrapedData: urls.map(url => ({ url: url.trim() }))
+    });
+    // Save the new document to MongoDB
+    try {
+      await newBase.save();
+      console.log('Data saved to MongoDB');
+    } catch (error) {
+      console.error('Error saving data to MongoDB:', error);
+    }
+  });
+}
+ 
