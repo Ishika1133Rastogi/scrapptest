@@ -5,7 +5,6 @@ const bodyParser = require('body-parser');
 require('dotenv').config();
 const scrap = require('./scraper1');
 const mongoose = require('mongoose');
-// require('./db/conn')
 const pdf = require('html-pdf');
 const Json2csvParser = require('json2csv').Parser;
 const axios = require('axios')
@@ -59,23 +58,6 @@ const baseSchema = new mongoose.Schema({
   scrapedData: [scrapedDataSchema]
 });
 const Base  = mongoose.model('Base', baseSchema);
-
-// const updateScrapedDataItem = async (itemId, isChecked) => {
-//   try {
-//     const result = await Base.findOneAndUpdate(
-//       { "scrapedData._id": itemId },
-//       { $set: { "scrapedData.$.isChecked": isChecked, "scrapedData.$.timestamp": isChecked ? Date.now() : null } },
-//       { new: true }
-//     );
-//     const scrapedItem = result.scrapedData.find(item => item._id.toString() === itemId.toString());
-//     const url = scrapedItem ? scrapedItem.url : null;
-//   console.log("url 123 ", url)
-//     return {  url2: scrapedItem.url };
-//   } catch (error) {
-//     console.error("Error updating document:", error);
-//     return { error };
-//   }
-// };
 
 const updateScrapedDataItem = async (itemId, isChecked) => {
   try {
@@ -149,34 +131,16 @@ app.post('/scrape', async (req, res) => {
   }
 });
 
-// app.put('/api/update-ischecked', async (req, res) => {
-//   const url = req.body.url;
-//   const id = req.body.id;
-//   console.log("checked Url is 123 ", url, "id is", id)
-//   const isChecked = req.body.isChecked;
-//   try {
-//   const {url2 } =  updateScrapedDataItem(id, isChecked);
-//   console.log("url2 must be ", url2)
-//     res.status(200).json({
-     
-//       url2
-//     })
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// });
 let urls ;
 //API HIT FOR MONGO DB DATABASE FOR TRUE VALUE
 app.put('/api/update-ischecked', async (req, res) => {
   // urls =[]
   const url = req.body.url;
   const id = req.body.id;
-  console.log("checked Url is 123 ", url, "id is", id)
   const isChecked = req.body.isChecked;
   const urlsArray = req.body.urlsArray;
   urls= urlsArray;
-  console.log("urls array is 123", urls)
-  // console.log('urlsArray:', urlsArray);
+ 
   try {
     updateScrapedDataItem(id, isChecked);
     res.status(200).json({
@@ -188,49 +152,12 @@ app.put('/api/update-ischecked', async (req, res) => {
 });
  
 
-// Define the API endpoint
-// app.get('/api/get-checked-urls/:id', async (req, res) => {
-//   try { 
-//     const id=req.params.id.trim();
-//     const user = await Base.findById(id);
-
-//     if (!user) {
-//       return res.status(404).json({ message: 'User not found' });
-//     }
-//     // Filter the scrapedData array to get URLs where isChecked is true
-//     const checkedUrls = user.scrapedData
-//       .filter(data => data.isChecked)
-//       .sort((a, b) => b.timestamp - a.timestamp) // Sort by timestamp in descending order
-//       .slice(0, 10) // Limit to the first 10 URLs
-//       .map(data => data.url);
-//     res.json(checkedUrls);
-//   } catch (error) {
-//     console.error('Error fetching checked URLs:', error);
-//     res.status(500).json({ message: 'Internal server error' });
-//   }
-// });
- 
-// let urls = []; // Store URLs received from API
 let selectors = []; // Store user-entered selectors
- 
-// Utility function to fetch URLs from '/api/get-urls' API
- 
-// async function getUrls() {
-//   try {
-//     const response = await axios.get('http://localhost:5002/api/get-checked-urls');
-//     urls = response.data.map((item) => item.url);
-//     console.log("checked url is:" , urls)
-//   } catch (error) {
-//     console.error('Error fetching URLs:', error);
-//   }
-// }
- 
+
 // Endpoint to receive user-entered selectors
 app.post('/scrapes', (req, res) => {
   const { selector } = req.body;
-  console.log(selector)
   selectors.push(selector);
-  console.log("selectors", selectors);
   res.json({ message: 'Selector added successfully' });
 });
  
@@ -238,10 +165,8 @@ app.post('/scrapes', (req, res) => {
 async function scrapeData(url, selector) {
   try {
     const response = await axios.get(url);
-    // console.log("scrapedat response", response);
     let pages = [];
     const $ = cheerio.load(response.data);
-    // console.log("$", $)
     let pageData = {};
     selector.forEach((selector) => {
       let values = [];
@@ -250,10 +175,8 @@ async function scrapeData(url, selector) {
       });
       pageData[selector] = values;
     });
-    // const scrapedData = $(selector).text().trim();
-    console.log("pagedata", pageData)
+   
     pages.push(pageData);
-    console.log("pages", pages)
     return pages;
  
   } catch (error) {
@@ -261,41 +184,31 @@ async function scrapeData(url, selector) {
     return null;
   }
 }
- 
- 
+
 app.post('/scrape-data', async (req, res) => {
  
-console.log("url lrn", urls.length, "selector len ", selectors.length)
   if (!urls.length || !selectors.length) {
     return res.status(400).json({ error: 'No URLs or selectors found' });
   }
  
   const scrapedData = [];
-  // console.log("loop url", url, "loop selector", selector)
   for (let i = 0; i < urls.length && i < selectors.length; i++) {
     const url = urls[i];
     const selector = selectors[i];
-    console.log("loop url", url, "loop selector", selector)
     const data = await scrapeData(url, selector);
-    // console.log("data 123", data);
     if (data) {
       scrapedData.push({ url, data });
-      console.log("scrapeData123", data)
     }
   }
  
   // Write scraped data to a file
   const output = scrapedData.map(({ url, data }) => `${url}: ${JSON.stringify(data)}`).join('\n');
-console.log("output", output)
 fs.writeFileSync('text.txt', output, 'utf-8');
  
   res.json({ message: 'Scraping completed successfully', data: scrapedData });
 });
  
 // Example usage: pass the path to your text file
-
- 
-
     app.listen(PORT, () => {
       console.log('Server running on port 5002');
     });
